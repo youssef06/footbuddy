@@ -5,6 +5,7 @@
 const request = require('request');
 const moment = require('moment');
 
+const TOKEN = 'c395383d75bc451894042f78c2fd318d';
 /**
  * Get previous or next fixture data for teamId
  * fixture date is converted to local timezone
@@ -14,13 +15,15 @@ const moment = require('moment');
  */
 function getTeamPreviousOrNextGame({teamId, type}) {
     const URL = `http://api.football-data.org/v1/teams/${teamId}/fixtures`;
-
     return new Promise((resolve, reject) => {
         request({
             url: URL,
             qs: {},
             method: 'GET',
-            json: {}
+            json: {},
+            headers: {
+                'X-Auth-Token': TOKEN
+            }
         }, function(error, response, body) {
             if (error) {
                 reject(error);
@@ -48,4 +51,61 @@ function getTeamPreviousOrNextGame({teamId, type}) {
     });
 }
 
-module.exports = getTeamPreviousOrNextGame;
+/**
+ * Get All competitions
+ * @returns {Promise}
+ */
+function getCompetitions() {
+    const URL = `http://api.football-data.org/v1/competitions`;
+
+    return new Promise((resolve, reject) => {
+        request({
+            url: URL,
+            qs: {},
+            method: 'GET',
+            json: {},
+            headers: {
+                'X-Auth-Token': TOKEN
+            }
+        }, function(error, response, body) {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(body);
+            }
+        });
+    });
+}
+
+/**
+ * Get all teams in competition competitionId
+ * @param competitionId
+ * @returns {Promise}
+ */
+function getTeamsInCompetition(competitionId) {
+    const URL = `http://api.football-data.org/v1/competitions/${competitionId}/teams`;
+
+    return new Promise((resolve, reject) => {
+        request({
+            url: URL,
+            qs: {},
+            method: 'GET',
+            json: {},
+            headers: {
+                'X-Auth-Token': TOKEN
+            }
+        }, function(error, response, body) {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(body.teams);
+            }
+        });
+    });
+}
+
+module.exports = {
+    getTeamPreviousOrNextGame,
+    getCompetitions,
+    getTeamsInCompetition
+};
