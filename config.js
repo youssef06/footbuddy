@@ -4,6 +4,7 @@
 const readlineSync = require('readline-sync');
 const path = require('path');
 const fs = require('fs');
+const selectTeam = require('./selectTeam');
 
 /**
  *
@@ -35,10 +36,19 @@ function getConfig() {
 
             if(index == choices.length - 1) {
                 //team is not on the list
-                reject('Still not supported');
+                selectTeam()
+                    .then(({teamId, name}) => {
+                        //save config
+                        config.favouriteTeam = {teamId: teamId, name: name};
+                        fs.writeFile(configFile, JSON.stringify(config, null, 2), function (err) {
+                            if(err) reject(err);
+
+                            resolve(config);
+                        });
+                    });
             } else {
                 //save config
-                config.favouriteTeam = {id: teams[choices[index]], name: choices[index]};
+                config.favouriteTeam = {teamId: teams[choices[index]], name: choices[index]};
                 console.log(`You selected : ${choices[index]}`);
                 fs.writeFile(configFile, JSON.stringify(config, null, 2), function (err) {
                     if(err) reject(err);
