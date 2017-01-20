@@ -13,12 +13,12 @@ const TOKEN = 'c395383d75bc451894042f78c2fd318d';
  * @param type
  * @returns {Promise}
  */
-function getTeamPreviousOrNextGame({teamId, type}) {
+function getTeamPreviousOrNextGames({teamId, type, n}) {
     const URL = `http://api.football-data.org/v1/teams/${teamId}/fixtures`;
     return new Promise((resolve, reject) => {
         request({
             url: URL,
-            qs: {},
+            qs: {timeFrame: type === 'previous'?'p60':'n60'},
             method: 'GET',
             json: {},
             headers: {
@@ -28,24 +28,17 @@ function getTeamPreviousOrNextGame({teamId, type}) {
             if (error) {
                 reject(error);
             } else {
-                let fixtures =  body.fixtures.filter((fixture) => {
-                    let r;
-                    if(type === "previous") {
-                        r = Date.parse(fixture.date) <= Date.now()
-                    } else {
-                        r = Date.parse(fixture.date) >= Date.now()
-                    }
-                    return r;
-                });
-                let fixture;
-                if(type === "previous") {
-                    fixture = fixtures[fixtures.length - 1];
-                } else {
-                    fixture = fixtures[0];
+                let fixtures =  body.fixtures;
+                if(type === 'previous')
+                {
+                    fixtures = fixtures.reverse();
                 }
+                fixtures = fixtures.slice(0, n);
                 //convert date to local
-                fixture.date = moment(new Date(fixture.date)).local();
-                resolve(fixture);
+                fixtures.forEach((fixture) => {
+                    fixture.date = moment(new Date(fixture.date)).local();
+                });
+                resolve(fixtures);
             }
         });
     });
@@ -104,8 +97,36 @@ function getTeamsInCompetition(competitionId) {
     });
 }
 
+/**
+ * Get league table for competitionId
+ * @param competitionId
+ * @returns {Promise}
+ */
+function getLeagueTable(competitionId) {
+    const URL = `http://api.football-data.org/v1/competitions/${competitionId}/leagueTable`;
+
+    return new Promise((resolve, reject) => {
+        request({
+            url: URL,
+            qs: {},
+            method: 'GET',
+            json: {},
+            headers: {
+                'X-Auth-Token': TOKEN
+            }
+        }, function(error, response, body) {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(body);
+            }
+        });
+    });
+}
+
 module.exports = {
-    getTeamPreviousOrNextGame,
+    getTeamPreviousOrNextGames,
     getCompetitions,
-    getTeamsInCompetition
+    getTeamsInCompetition,
+    getLeagueTable
 };
