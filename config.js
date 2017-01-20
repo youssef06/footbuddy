@@ -37,9 +37,9 @@ function getConfig() {
             if(index == choices.length - 1) {
                 //team is not on the list
                 selectTeam()
-                    .then(({teamId, name}) => {
+                    .then(({teamId, name, competitionId}) => {
                         //save config
-                        config.favouriteTeam = {teamId: teamId, name: name};
+                        config.favouriteTeam = {teamId: teamId, name: name, competitionId: competitionId};
                         fs.writeFile(configFile, JSON.stringify(config, null, 2), function (err) {
                             if(err) reject(err);
 

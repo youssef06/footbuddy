@@ -10,6 +10,8 @@ const readlineSync = require('readline-sync');
  * @returns {Promise.<TResult>}
  */
 function selectTeam() {
+    let competitionId;
+
     return getCompetitions()
         .then(function (competitions) {
             let captions = competitions.map((competition) => {
@@ -20,6 +22,7 @@ function selectTeam() {
             });
             let compIndex = readlineSync.keyInSelect(captions, "");
             console.log(`You selected ${captions[compIndex]} : ${ids[compIndex]}`);
+            competitionId = ids[compIndex];
 
             return getTeamsInCompetition(ids[compIndex]);
         })
@@ -39,7 +42,7 @@ function selectTeam() {
             let teamIndex = readlineSync.keyInSelect(captions, "");
             console.log(`You selected ${captions[teamIndex]} : ${ids[teamIndex]}`);
 
-            return {teamId: ids[teamIndex], name: captions[teamIndex]};
+            return {teamId: ids[teamIndex], name: captions[teamIndex], competitionId: competitionId};
         });
 }
 
