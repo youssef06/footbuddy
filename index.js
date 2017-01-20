@@ -9,6 +9,10 @@ const TYPES = {
 };
 
 const colors = require('colors');
+const getConfig = require('./config');
+const getTeamPreviousOrNextGames = require('./api').getTeamPreviousOrNextGames;
+const getLeagueTable = require('./api').getLeagueTable;
+const selectTeam = require('./selectTeam');
 const argv = require('yargs')
     .usage('Usage: $0 <command> [options]')
     .command('next [n]', 'Check upcoming n games',
@@ -36,11 +40,6 @@ const argv = require('yargs')
     .help('h')
     .epilog('Made by Youssef 2017.')
     .argv;
-
-const getConfig = require('./config');
-const getTeamPreviousOrNextGames = require('./api').getTeamPreviousOrNextGames;
-const getLeagueTable = require('./api').getLeagueTable;
-const selectTeam = require('./selectTeam');
 
 /**
  * Interactive list of previous/upcoming games
