@@ -11,25 +11,30 @@ const TYPES = {
 const colors = require('colors');
 const argv = require('yargs')
     .usage('Usage: $0 <command> [options]')
-    .command('next [games]', 'Check next game',
+    .command('next [n]', 'Check upcoming n games',
         (yargs) => {/*yargs.default('games', 1)*/},
         (argv) => {
             nextOrLastGames(TYPES.next, argv);
         }
     )
-    .example('$0 next 5', 'view next 5 games')
-    .command('last [games]', 'Check last game',
+    .example('$0 next 5', 'View next 5 games of your favourite team')
+    .command('last [n]', 'Check last n games',
         (yargs) => {/*yargs.default('games', 1)*/},
         (argv) => {
             nextOrLastGames(TYPES.last, argv);
         }
     )
-    .command('table', 'League table', {}, leagueTable)
+    .example('$0 last 5', 'View last 5 games of your favourite team')
+    .command('table', 'View league table', {}, leagueTable)
+    .example('$0 table', 'View league table of your favourite team')
     .option('custom', {
         alias: 'c',
-        describe: 'custom team'
+        describe: 'Choose a custom team instead of your favourite team.'
     })
+    .example('$0 next 5 --custom', 'Choose a different team then view their next 5 games')
+    .example('$0 table --custom', 'Choose a different team then view their position in their league table')
     .help('h')
+    .epilog('Made by Youssef 2017.')
     .argv;
 
 const getConfig = require('./config');
@@ -44,8 +49,6 @@ const selectTeam = require('./selectTeam');
  */
 function nextOrLastGames(type, argv) {
 
-    console.log(argv.games);
-
     new Promise((res, rej) => res())
         .then(() => {
             if (argv.custom) {
@@ -57,7 +60,7 @@ function nextOrLastGames(type, argv) {
             }
         })
         .then(({teamId}) => {
-            return getTeamPreviousOrNextGames({teamId: teamId, type: type, n: argv.games})
+            return getTeamPreviousOrNextGames({teamId: teamId, type: type, n: argv.n})
                 .then((fixtures) => {
                     fixtures.forEach((fixture) => {
                         process.stdout.write(colors.bgGreen(`The game between ${fixture.homeTeamName} and ${fixture.awayTeamName} `));
