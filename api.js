@@ -36,7 +36,7 @@ function getTeamPreviousOrNextGames({teamId, type, n}) {
                 fixtures = fixtures.slice(0, n);
                 //convert date to local
                 fixtures.forEach((fixture) => {
-                    fixture.date = moment(new Date(fixture.date)).local();
+                    fixture.date = moment(new Date(fixture.date)).local().calendar(null, {sameElse: 'DD/MM/YYYY hh:mm A'});
                 });
                 resolve(fixtures);
             }
