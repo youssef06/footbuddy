@@ -62,6 +62,7 @@ function nextOrLastGames(type, argv) {
             return getTeamPreviousOrNextGames({teamId: teamId, type: type, n: argv.n})
                 .then((fixtures) => {
                     let head = [
+                        colors.bgWhite.black.bold(` Competition `),
                         colors.bgWhite.black.bold(` Home `),
                         colors.bgWhite.black.bold(` Away `),
                         colors.bgWhite.black.bold(` Date `)
@@ -80,6 +81,7 @@ function nextOrLastGames(type, argv) {
                     });
                     fixtures.forEach((fixture) => {
                         let row = [
+                            colors.bgWhite.black(fixture.competition.caption),
                             colors.bgWhite.black(fixture.homeTeamName),
                             colors.bgWhite.black(fixture.awayTeamName),
                             colors.bgWhite.black(fixture.date)
