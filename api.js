@@ -34,11 +34,58 @@ function getTeamPreviousOrNextGames({teamId, type, n}) {
                     fixtures = fixtures.reverse();
                 }
                 fixtures = fixtures.slice(0, n);
-                //convert date to local
+
+                let p = {}; //distinct competitions promises
                 fixtures.forEach((fixture) => {
+                    //convert date to local
                     fixture.date = moment(new Date(fixture.date)).local().calendar(null, {sameElse: 'DD/MM/YYYY hh:mm A'});
+                    //get competitionId from url
+                    var re = /http:\/\/api.football-data.org\/v1\/competitions\/(\d+)/;
+                    let matches = fixture._links.competition.href.match(re);
+                    let competitionId = fixture.competitionId = parseInt(matches[1]);
+
+                    if(!p[competitionId]) {
+                        //if new competitionId request it
+                        p[competitionId] = getCompetitionById(competitionId);
+                    }
                 });
-                resolve(fixtures);
+
+                Promise.all(Object.values(p))
+                    .then((competitions) => {
+                        fixtures.forEach((fixture) => {
+                            //get competition for fixture.competitionId from results
+                            let comp = competitions.filter((competition) => competition.id === fixture.competitionId);
+                            fixture.competition = comp.length ? comp[0] : null;
+                        });
+                        resolve(fixtures);
+                    });
+            }
+        });
+    });
+}
+
+/**
+ * Get competition detail by ID
+ * @param competitionId
+ * @returns {Promise}
+ */
+function getCompetitionById(competitionId) {
+    const URL = `http://api.football-data.org/v1/competitions/${competitionId}`;
+
+    return new Promise((resolve, reject) => {
+        request({
+            url: URL,
+            qs: {},
+            method: 'GET',
+            json: {},
+            headers: {
+                'X-Auth-Token': TOKEN
+            }
+        }, function(error, response, body) {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(body);
             }
         });
     });
