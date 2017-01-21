@@ -80,14 +80,18 @@ function nextOrLastGames(type, argv) {
                         }
                     });
                     fixtures.forEach((fixture) => {
+                        let homeTeamId = getTeamIdFromURL(fixture._links.homeTeam.href);
+                        let awayTeamId = getTeamIdFromURL(fixture._links.awayTeam.href);
                         let row = [
                             colors.bgWhite.black(fixture.competition.caption),
-                            colors.bgWhite.black(fixture.homeTeamName),
-                            colors.bgWhite.black(fixture.awayTeamName),
+                            homeTeamId == teamId?colors.bgCyan.black(` ${fixture.homeTeamName} `):
+                                colors.bgWhite.black(fixture.homeTeamName),
+                            awayTeamId == teamId?colors.bgCyan.black(` ${fixture.awayTeamName} `):
+                                colors.bgWhite.black(fixture.awayTeamName),
                             colors.bgWhite.black(fixture.date)
                         ];
                         if(type === TYPES.last) {
-                            row.push(colors.bgCyan.white.underline(` ${fixture.result.goalsHomeTeam}-${fixture.result.goalsAwayTeam} `));
+                            row.push(colors.bgGreen.white.underline(` ${fixture.result.goalsHomeTeam}-${fixture.result.goalsAwayTeam} `));
                         }
                         cliTable.push(row);
                     });
@@ -161,4 +165,17 @@ function leagueTable() {
         console.log('Something went wrong');
         console.log(err);
     });
+}
+
+/**
+ * Get teamId from TeamURL
+ * @param url
+ * @returns {Number}
+ */
+function getTeamIdFromURL(url) {
+    //get id from url
+    var re = /http:\/\/api.football-data.org\/v1\/teams\/(\d+)/;
+    let matches = url.match(re);
+
+    return parseInt(matches[1]);
 }
