@@ -7,7 +7,7 @@ const TYPES = {
     next: 'next',
     last: 'previous'
 };
-
+const Table = require('cli-table2');
 const colors = require('colors');
 const getConfig = require('./config');
 const getTeamPreviousOrNextGames = require('./api').getTeamPreviousOrNextGames;
@@ -61,17 +61,36 @@ function nextOrLastGames(type, argv) {
         .then(({teamId}) => {
             return getTeamPreviousOrNextGames({teamId: teamId, type: type, n: argv.n})
                 .then((fixtures) => {
-                    fixtures.forEach((fixture) => {
-                        process.stdout.write(colors.bgGreen(`The game between ${fixture.homeTeamName} and ${fixture.awayTeamName} `));
-                        if(type === TYPES.last) {
-                            process.stdout.write(colors.bgGreen(` was played on `)+colors.bgBlue.underline(fixture.date) +
-                                colors.bgGreen(` and ended `)
-                                + colors.bgBlue.underline(` ${fixture.result.goalsHomeTeam}-${fixture.result.goalsAwayTeam} `));
-                        } else {
-                            process.stdout.write(colors.bgGreen(` will be played on `) + colors.bgBlue.underline(` ${fixture.date} `));
+                    let head = [
+                        colors.bgWhite.black.bold(` Home `),
+                        colors.bgWhite.black.bold(` Away `),
+                        colors.bgWhite.black.bold(` Date `)
+                    ];
+                    if(type === TYPES.last) {
+                        head.push(colors.bgBlack.white(` Result `));
+                    }
+                    let cliTable = new Table({
+                        head: head,
+                        style: {
+                            border: ['cyan', 'bgWhite'],
+                            'padding-left': 1,
+                            'padding-right': 1,
+                            empty: ['bgWhite']
                         }
-                        console.log();
                     });
+                    fixtures.forEach((fixture) => {
+                        let row = [
+                            colors.bgWhite.black(fixture.homeTeamName),
+                            colors.bgWhite.black(fixture.awayTeamName),
+                            colors.bgWhite.black(fixture.date)
+                        ];
+                        if(type === TYPES.last) {
+                            row.push(colors.bgCyan.white.underline(` ${fixture.result.goalsHomeTeam}-${fixture.result.goalsAwayTeam} `));
+                        }
+                        cliTable.push(row);
+                    });
+
+                    console.log(cliTable.toString());
                 });
         }).catch((err) => {
         console.log('Something went wrong');
@@ -97,24 +116,44 @@ function leagueTable() {
         .then(({teamId, name, competitionId}) => {
             return getLeagueTable(competitionId)
                 .then((table) => {
-                    console.log(colors.bgYellow(`${table.leagueCaption}`));
+                    console.log(colors.bgYellow.white(`${table.leagueCaption}`));
+
+                    let cliTable = new Table({
+                        head: [
+                            colors.bgWhite.black.bold(` Pos `),
+                            colors.bgWhite.black.bold(` Team `),
+                            colors.bgWhite.black.bold(` Pts `),
+                            colors.bgWhite.black.bold(` Played `)
+                        ],
+                        style: {
+                            border: ['cyan', 'bgWhite'],
+                            'padding-left': 0,
+                            'padding-right': 0,
+                            empty: ['bgWhite']
+                        }
+                    });
                     table.standing.forEach((team) => {
                         var re = /http:\/\/api.football-data.org\/v1\/teams\/(\d+)/;
                         let matches = team._links.team.href.match(re);
                         let currentId =  matches[1];
 
-                        let line;
                         if(currentId === teamId) {
-                            line = colors.bgCyan.white(` ${("0" + team.position).slice(-2)} `) +
-                                colors.bgYellow.white(`(${("0" + team.points).slice(-2)})`);
-                            line += colors.bgCyan(` ${team.teamName} `);
+                            cliTable.push([
+                                colors.bgGreen.white(` ${("0" + team.position).slice(-2)} `),
+                                colors.bgGreen.white(` ${team.teamName} `),
+                                colors.bgYellow.white(`(${("0" + team.points).slice(-2)})`),
+                                colors.bgGreen.white(` ${team.playedGames} `)
+                            ]);
                         } else {
-                            line = colors.bgWhite.grey(` ${("0" + team.position).slice(-2)} `) +
-                                colors.bgWhite.green(`(${("0" + team.points).slice(-2)})`);
-                            line += colors.bgWhite.black(` ${team.teamName} `);
+                            cliTable.push([
+                                colors.bgWhite.grey(` ${("0" + team.position).slice(-2)} `),
+                                colors.bgWhite.black(` ${team.teamName} `),
+                                colors.bgWhite.green(`(${("0" + team.points).slice(-2)})`),
+                                colors.bgWhite.black(` ${team.playedGames} `)
+                            ]);
                         }
-                        console.log(line);
                     });
+                    console.log(cliTable.toString());
                 });
         }).catch((err) => {
         console.log('Something went wrong');
