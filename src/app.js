@@ -33,6 +33,7 @@ const argv = require('yargs')
     .example('$0 table', 'View league table of your favourite team')
     .command('competition', 'View competition', {}, function() {
         showCompetition();
+        console.log('After competition');
     })
     .option('custom', {
         alias: 'c',

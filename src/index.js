@@ -5,4 +5,4 @@
 //in order for async/await to work babel-polyfill needs to be required before anything else
 require("babel-polyfill");
 //include app file
-require('./app-babelified');
+require('./app');
