@@ -65,6 +65,34 @@ function getTeamPreviousOrNextGames({teamId, type, n}) {
 }
 
 /**
+ * Get Fxitures for a competition on a specific matchDay
+ * @param competitionId
+ * @param matchday
+ * @returns {Promise}
+ */
+function getCompetitionFixtures(competitionId, matchday) {
+    const URL = `http://api.football-data.org/v1/competitions/${competitionId}/fixtures`;
+
+    return new Promise((resolve, reject) => {
+        request({
+            url: URL,
+            qs: {matchday: matchday},
+            method: 'GET',
+            json: {},
+            headers: {
+                'X-Auth-Token': TOKEN
+            }
+        }, function(error, response, body) {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(body.fixtures);
+            }
+        });
+    });
+}
+
+/**
  * Get competition detail by ID
  * @param competitionId
  * @returns {Promise}
@@ -175,5 +203,13 @@ module.exports = {
     getTeamPreviousOrNextGames,
     getCompetitions,
     getTeamsInCompetition,
-    getLeagueTable
+    getLeagueTable,
+    getCompetitionFixtures,
+    fixtureStatus: {
+        FINISHED: 'FINISHED',
+        TIMED: 'TIMED',
+        SCHEDULED: 'SCHEDULED',
+        IN_PLAY: 'IN_PLAY',
+        POSTPONED: 'POSTPONED'
+    }
 };
