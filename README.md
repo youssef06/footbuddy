@@ -2,7 +2,10 @@ FootBuddy: A smart command line tool for Football fans
 ==================================================
 All data is from [api.football-data.org](http://api.football-data.org/)
 
-![Screen1]()
+![Screen1](images/1.gif)
+![Screen2](images/2.gif)
+![Screen3](images/3.gif)
+![Screen4](images/4.gif)
 
 - Check upcoming/past games of your favourite team or any other team.
 - Check league tables.
