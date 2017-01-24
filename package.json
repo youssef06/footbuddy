@@ -1,6 +1,6 @@
 {
   "name": "footbuddy",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A smart command line tool for Football fans",
   "main": "index.js",
   "dependencies": {
@@ -27,6 +27,14 @@
   "bin": {
     "footbuddy": "dist/index.js"
   },
+  "keywords": [
+    "football",
+    "scores",
+    "table",
+    "league",
+    "champions league",
+    "fixtures"
+  ],
   "author": "Youssef",
   "license": "ISC"
 }
