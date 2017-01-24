@@ -19,7 +19,7 @@
     "babel-preset-env": "^1.1.8"
   },
   "scripts": {
-    "start": "npm run build && npm run serve",
+    "start": "npm run build && npm run serve -- ",
     "build": "rm -rf dist && node_modules/babel-cli/bin/babel.js src -d dist",
     "serve": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
