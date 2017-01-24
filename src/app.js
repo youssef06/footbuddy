@@ -33,7 +33,6 @@ const argv = require('yargs')
     .example('$0 table', 'View league table of your favourite team')
     .command('competition', 'View competition', {}, function() {
         showCompetition();
-        console.log('After competition');
     })
     .option('custom', {
         alias: 'c',
@@ -50,131 +49,134 @@ const argv = require('yargs')
  * @param type
  * @param argv
  */
-function nextOrLastGames(type, argv) {
+async function nextOrLastGames(type, argv) {
+    try {
+        let team;
+        if (argv.custom) {
+            //prompt the user to select a team
+            team = await selectTeam();
+        } else {
+            //get the user's favourite team
+            team = await getConfig().then(({favouriteTeam}) => {
+                return favouriteTeam;
+            });
+        }
 
-    new Promise((res, rej) => res())
-        .then(() => {
-            if (argv.custom) {
-                return selectTeam();
-            } else {
-                return getConfig().then(({favouriteTeam}) => {
-                    return favouriteTeam;
-                });
+        let {teamId} = team;
+        let fixtures = await Api.getTeamPreviousOrNextGames({teamId: teamId, type: type, n: argv.n});
+
+        //table header
+        let head = [
+            colors.bgWhite.black.bold(` Competition `),
+            colors.bgWhite.black.bold(` Home `),
+            colors.bgWhite.black.bold(` Away `),
+            colors.bgWhite.black.bold(` Date `)
+        ];
+        if (type === TYPES.last) {
+            head.push(colors.bgBlack.white(` Result `));
+        }
+        let cliTable = new Table({
+            head: head,
+            style: {
+                border: ['cyan', 'bgWhite'],
+                'padding-left': 1,
+                'padding-right': 1,
+                empty: ['bgWhite']
             }
-        })
-        .then(({teamId}) => {
-            return Api.getTeamPreviousOrNextGames({teamId: teamId, type: type, n: argv.n})
-                .then((fixtures) => {
-                    let head = [
-                        colors.bgWhite.black.bold(` Competition `),
-                        colors.bgWhite.black.bold(` Home `),
-                        colors.bgWhite.black.bold(` Away `),
-                        colors.bgWhite.black.bold(` Date `)
-                    ];
-                    if(type === TYPES.last) {
-                        head.push(colors.bgBlack.white(` Result `));
-                    }
-                    let cliTable = new Table({
-                        head: head,
-                        style: {
-                            border: ['cyan', 'bgWhite'],
-                            'padding-left': 1,
-                            'padding-right': 1,
-                            empty: ['bgWhite']
-                        }
-                    });
-                    fixtures.forEach((fixture) => {
-                        let homeTeamId = getTeamIdFromURL(fixture._links.homeTeam.href);
-                        let awayTeamId = getTeamIdFromURL(fixture._links.awayTeam.href);
-                        let row = [
-                            colors.bgWhite.black(fixture.competition.caption),
-                            homeTeamId == teamId?colors.bgCyan.black(` ${fixture.homeTeamName} `):
-                                colors.bgWhite.black(fixture.homeTeamName),
-                            awayTeamId == teamId?colors.bgCyan.black(` ${fixture.awayTeamName} `):
-                                colors.bgWhite.black(fixture.awayTeamName),
-                            colors.bgWhite.black(fixture.date)
-                        ];
-                        if(type === TYPES.last) {
-                            row.push(colors.bgGreen.white.underline(` ${fixture.result.goalsHomeTeam}-${fixture.result.goalsAwayTeam} `));
-                        }
-                        cliTable.push(row);
-                    });
+        });
+        fixtures.forEach((fixture) => {
+            let homeTeamId = getTeamIdFromURL(fixture._links.homeTeam.href);
+            let awayTeamId = getTeamIdFromURL(fixture._links.awayTeam.href);
+            let row = [
+                colors.bgWhite.black(fixture.competition.caption),
+                homeTeamId == teamId ? colors.bgCyan.black(` ${fixture.homeTeamName} `) :
+                    colors.bgWhite.black(fixture.homeTeamName),
+                awayTeamId == teamId ? colors.bgCyan.black(` ${fixture.awayTeamName} `) :
+                    colors.bgWhite.black(fixture.awayTeamName),
+                colors.bgWhite.black(fixture.date)
+            ];
+            if (type === TYPES.last) {
+                row.push(colors.bgGreen.white.underline(` ${fixture.result.goalsHomeTeam}-${fixture.result.goalsAwayTeam} `));
+            }
+            cliTable.push(row);
+        });
 
-                    console.log(cliTable.toString());
-                });
-        }).catch((err) => {
+        console.log(cliTable.toString());
+    } catch (err) {
         console.log('Something went wrong');
         console.log(err);
-    });
+    };
 }
 
 /**
  * Interactive League table
  */
-function leagueTable() {
+async function leagueTable(argv) {
+    try {
+        let team;
+        if (argv.custom) {
+            team = await selectTeam();
+        } else {
+            team = await getConfig().then(({favouriteTeam}) => {
+                return favouriteTeam;
+            });
+        }
 
-    new Promise((res, rej) => res())
-        .then(() => {
-            if (argv.custom) {
-                return selectTeam();
-            } else {
-                return getConfig().then(({favouriteTeam}) => {
-                    return favouriteTeam;
-                });
+        let {teamId, name, competitionId} = team;
+
+        let table = await Api.getLeagueTable(competitionId);
+        console.log(colors.bgYellow.white(`${table.leagueCaption}`));
+
+        let cliTable = new Table({
+            head: [
+                colors.bgWhite.black.bold(` Pos `),
+                colors.bgWhite.black.bold(` Team `),
+                colors.bgWhite.black.bold(` Pts `),
+                colors.bgWhite.black.bold(` Played `)
+            ],
+            style: {
+                border: ['cyan', 'bgWhite'],
+                'padding-left': 0,
+                'padding-right': 0,
+                empty: ['bgWhite']
             }
-        })
-        .then(({teamId, name, competitionId}) => {
-            return Api.getLeagueTable(competitionId)
-                .then((table) => {
-                    console.log(colors.bgYellow.white(`${table.leagueCaption}`));
+        });
 
-                    let cliTable = new Table({
-                        head: [
-                            colors.bgWhite.black.bold(` Pos `),
-                            colors.bgWhite.black.bold(` Team `),
-                            colors.bgWhite.black.bold(` Pts `),
-                            colors.bgWhite.black.bold(` Played `)
-                        ],
-                        style: {
-                            border: ['cyan', 'bgWhite'],
-                            'padding-left': 0,
-                            'padding-right': 0,
-                            empty: ['bgWhite']
-                        }
-                    });
-                    table.standing.forEach((team) => {
-                        var re = /http:\/\/api.football-data.org\/v1\/teams\/(\d+)/;
-                        let matches = team._links.team.href.match(re);
-                        let currentId =  matches[1];
+        table.standing.forEach((team) => {
 
-                        if(currentId === teamId) {
-                            cliTable.push([
-                                colors.bgGreen.white(` ${("0" + team.position).slice(-2)} `),
-                                colors.bgGreen.white(` ${team.teamName} `),
-                                colors.bgYellow.white(`(${("0" + team.points).slice(-2)})`),
-                                colors.bgGreen.white(` ${team.playedGames} `)
-                            ]);
-                        } else {
-                            cliTable.push([
-                                colors.bgWhite.grey(` ${("0" + team.position).slice(-2)} `),
-                                colors.bgWhite.black(` ${team.teamName} `),
-                                colors.bgWhite.green(`(${("0" + team.points).slice(-2)})`),
-                                colors.bgWhite.black(` ${team.playedGames} `)
-                            ]);
-                        }
-                    });
-                    console.log(cliTable.toString());
-                });
-        }).catch((err) => {
+            /*var re = /http:\/\/api.football-data.org\/v1\/teams\/(\d+)/;
+            let matches = team._links.team.href.match(re);*/
+            let currentId =  getTeamIdFromURL(team._links.team.href);
+
+            if(currentId === teamId) {
+                //highlight user selected team
+                cliTable.push([
+                    colors.bgGreen.white(` ${("0" + team.position).slice(-2)} `),
+                    colors.bgGreen.white(` ${team.teamName} `),
+                    colors.bgYellow.white(`(${("0" + team.points).slice(-2)})`),
+                    colors.bgGreen.white(` ${team.playedGames} `)
+                ]);
+            } else {
+                cliTable.push([
+                    colors.bgWhite.grey(` ${("0" + team.position).slice(-2)} `),
+                    colors.bgWhite.black(` ${team.teamName} `),
+                    colors.bgWhite.green(`(${("0" + team.points).slice(-2)})`),
+                    colors.bgWhite.black(` ${team.playedGames} `)
+                ]);
+            }
+        });
+        console.log(cliTable.toString());
+    } catch(err) {
         console.log('Something went wrong');
         console.log(err);
-    });
+    };
 }
 
 /**
  * Interactively select competition and show/navigate its fixtures
  */
 async function showCompetition() {
+    //options for navigating through fixtures
     const navigationOptions = {previous: 'Previous', next: 'Next'};
     try {
         //get competitions from API
@@ -193,6 +195,7 @@ async function showCompetition() {
             console.log('Bye!');
             process.exit();
         }
+
         console.log(`You selected ${captions[compIndex]} : ${ids[compIndex]}`);
         let competitionId = ids[compIndex];
         let matchDay = competitions[compIndex].currentMatchday;
@@ -212,7 +215,7 @@ async function showCompetition() {
             if(matchDay <= competitions[compIndex].currentMatchday) {
                 //if match day <= currentMatchday then the game has a result
                 head.push(colors.bgBlack.white(` Result `));
-             }
+            }
             
             let cliTable = new Table({
                 head: head,
@@ -234,8 +237,8 @@ async function showCompetition() {
                     //if fixture finished or in_play it has a result
                     row.push(colors.bgGreen.white.underline(` ${fixture.result.goalsHomeTeam}-${fixture.result.goalsAwayTeam} `));
                 } else if(matchDay <= competitions[compIndex].currentMatchday) {
-                    //fixture doesn't have a result even though the matchday is passed or current
-                    //(case of a game that will be played in a few hours..., or a postponed game)
+                    //fixture doesn't have a result even though matchDay has passed or is the current one
+                    //(cases of a game that will be played in a few hours..., or a postponed game)
                     row.push('');
                 }
                 cliTable.push(row);
@@ -247,8 +250,10 @@ async function showCompetition() {
             let choices;
             //check edge cases
             if(competitions[compIndex].numberOfMatchdays == matchDay) {
+                //last matchDay of the season
                 choices = [navigationOptions.previous];
             } else if(matchDay === 1){
+                //1st matchDay of the season
                 choices = [navigationOptions.next];
             } else {
                 choices = [

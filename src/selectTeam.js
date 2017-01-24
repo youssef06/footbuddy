@@ -1,64 +1,59 @@
 /**
  * Created by youssef on 1/19/17.
  */
-const getCompetitions = require('./api').getCompetitions;
-const getTeamsInCompetition = require('./api').getTeamsInCompetition;
+const Api = require('./api');
 const readlineSync = require('readline-sync');
 const path = require('path');
 const fs = require('fs');
 
 /**
  * Interactively select a team from the API
- * @returns {Promise.<TResult>}
  */
-function selectTeamFromAPI() {
+async function selectTeamFromAPI() {
     let competitionId;
 
-    return getCompetitions()
-        .then(function (competitions) {
-            let captions = competitions.map((competition) => {
-                return competition.caption;
-            });
-            let ids = competitions.map((competition) => {
-                return competition.id;
-            });
-            let compIndex = readlineSync.keyInSelect(captions, "");
+    let competitions = await Api.getCompetitions();
+    let captions = competitions.map((competition) => {
+        return competition.caption;
+    });
+    let ids = competitions.map((competition) => {
+        return competition.id;
+    });
+    let compIndex = readlineSync.keyInSelect(captions, "");
 
-            if(compIndex === -1) {
-                console.log('Bye!');
-                process.exit();
-            }
+    if(compIndex === -1) {
+        console.log('Bye!');
+        process.exit();
+    }
 
-            console.log(`You selected ${captions[compIndex]} : ${ids[compIndex]}`);
-            competitionId = ids[compIndex];
+    console.log(`You selected ${captions[compIndex]} : ${ids[compIndex]}`);
+    competitionId = ids[compIndex];
 
-            return getTeamsInCompetition(ids[compIndex]);
-        })
-        .then((teams) => {
-            let captions = teams.map((team) => {
-                return team.name;
-            });
+    let teams = await Api.getTeamsInCompetition(ids[compIndex]);
 
-            let ids = teams.map((team) => {
-                //get id from url
-                var re = /http:\/\/api.football-data.org\/v1\/teams\/(\d+)/;
-                let matches = team._links.self.href.match(re);
+    captions = teams.map((team) => {
+        return team.name;
+    });
 
-                return matches[1];
-            });
+    ids = teams.map((team) => {
+        //get id from url
+        var re = /http:\/\/api.football-data.org\/v1\/teams\/(\d+)/;
+        let matches = team._links.self.href.match(re);
 
-            let teamIndex = readlineSync.keyInSelect(captions, "");
-            console.log(`You selected ${captions[teamIndex]} : ${ids[teamIndex]}`);
+        return matches[1];
+    });
 
-            return {teamId: ids[teamIndex], name: captions[teamIndex], competitionId: competitionId};
-        });
+    let teamIndex = readlineSync.keyInSelect(captions, "");
+    console.log(`You selected ${captions[teamIndex]} : ${ids[teamIndex]}`);
+
+    return {teamId: parseInt(ids[teamIndex]), name: captions[teamIndex], competitionId: competitionId};
 }
 
 /**
  *
  * @returns {*}
  */
-function selectTeam() {
+async function selectTeam() {
     //check teams the user checked before
     const HOME = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE;
     const teamsFile = path.join(HOME, '.teams.json');
@@ -81,29 +76,25 @@ function selectTeam() {
         }
         if(index !== choices.length - 1) {
             //user selected a team and not the option "My team is not on the list"
-            return new Promise((res, rej) => {
-                res({
-                    teamId: teams[index].teamId,
+            return {
+                    teamId: parseInt(teams[index].teamId),
                     name: teams[index].name,
                     competitionId: teams[index].competitionId
-                });
-            });
+            };
         }
     }
 
-    return selectTeamFromAPI()
-        .then(({teamId, name, competitionId}) => {
-            //add team to .teams.json
-            let team = {teamId: teamId, name: name, competitionId: competitionId};
-            teams.push(team);
-            try {
-                fs.writeFileSync(teamsFile, JSON.stringify(teams, null, 2), 'utf8')
-            } catch(e) {
-                console.log('could not write to .teams.json', e);
-            };
+    let {teamId, name, competitionId} = await selectTeamFromAPI();
+    //add team to .teams.json
+    let team = {teamId: teamId, name: name, competitionId: competitionId};
+    teams.push(team);
+    try {
+        fs.writeFileSync(teamsFile, JSON.stringify(teams, null, 2), 'utf8')
+    } catch(e) {
+        throw 'could not write to .teams.json' + e;
+    };
 
-            return team;
-        });
+    return team;
 }
 
 module.exports = selectTeam;
