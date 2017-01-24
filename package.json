@@ -1,7 +1,7 @@
 {
   "name": "footbuddy",
   "version": "1.0.0",
-  "description": "",
+  "description": "A smart command line tool for Football fans",
   "main": "index.js",
   "dependencies": {
     "babel-polyfill": "^6.22.0",
@@ -24,7 +24,7 @@
     "serve": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "bin": "index.js",
+  "bin": "dist/index.js",
   "author": "Youssef",
   "license": "ISC"
 }
