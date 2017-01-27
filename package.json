@@ -3,6 +3,10 @@
   "version": "1.0.5",
   "description": "A smart command line tool for Football fans",
   "main": "index.js",
+  "repository" :  {
+    "type" : "git",
+    "url" : "https://github.com/youssef06/footbuddy.git"
+  },
   "dependencies": {
     "babel-polyfill": "^6.22.0",
     "cli-table2": "github:youssef06/cli-table2",
