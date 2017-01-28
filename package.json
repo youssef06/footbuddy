@@ -1,6 +1,6 @@
 {
   "name": "footbuddy",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "A smart command line tool for Football fans",
   "main": "index.js",
   "repository": {
